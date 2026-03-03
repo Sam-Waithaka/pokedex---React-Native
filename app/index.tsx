@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { Link } from "expo-router";
-import { ScrollView, Text, View, Image, StyleSheet } from "react-native";
+import { FlatList, Text, View, Image, StyleSheet } from "react-native";
+
 
 interface Pokemon{
   name: string,
@@ -77,46 +78,64 @@ export default function Index() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={{
-        gap: 16,
-        padding: 16
+  <FlatList
+    data={pokemons}
+    keyExtractor={(item) => item.name}
+    contentContainerStyle={{
+      padding: 16,
+      // gap: 16
+    }}
+    renderItem={({ item }) => (
+      <PokemonCard pokemon={item} />
+    )}
+    ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+  />
+);
+}
+
+const PokemonCard = memo(({ pokemon }: { pokemon: Pokemon }) => {
+  const primaryType = pokemon.types?.[0]?.type
+    ?.name as keyof typeof colorsByType;
+
+  const backgroundColor =
+    primaryType && colorsByType[primaryType]
+      ? colorsByType[primaryType] + "50"
+      : "#eee";
+
+  return (
+    <Link
+      href={{
+        pathname: "/details",
+        params: { name: pokemon.name },
+      }}
+      style={{
+        backgroundColor,
+        padding: 20,
+        borderRadius: 20,
       }}
     >
-      {pokemons.map((pokemon) => (
-        <Link key={pokemon.name}
-          href={{
-            pathname: "/details",
-            params: {name: pokemon.name}
-          }}
-          style={{
-          // @ts-ignore
-          backgroundColor: colorsByType[pokemon.types[0].type.name] + 50,
-          padding: 20,
-          borderRadius: 20
-        }}
-        >
-          <View>
-          <Text style={styles.name}>{pokemon.name}</Text>
-          <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
-          <View style={{
-            flexDirection: 'row'
-          }}>
-            <Image 
-              source={{uri: pokemon.image}}
-              style={{width: 150, height: 150}}
-            />
-            <Image 
-              source={{uri: pokemon.imageBack}}
-              style={{width: 150, height: 150}}
-            />
-          </View>
+      <View>
+        <Text style={styles.name}>{pokemon.name}</Text>
+        <Text style={styles.type}>
+          {primaryType ?? "unknown"}
+        </Text>
+
+        <View style={{ flexDirection: "row" }}>
+          <Image
+            source={{ uri: pokemon.image }}
+            style={{ width: 150, height: 150 }}
+          />
+          <Image
+            source={{ uri: pokemon.imageBack }}
+            style={{ width: 150, height: 150 }}
+          />
         </View>
-        </Link>
-      ))}
-    </ScrollView>
+      </View>
+    </Link>
   );
-}
+});
+
+PokemonCard.displayName = "PokemonCard";
 
 const styles = StyleSheet.create({
   name: {
