@@ -1,6 +1,6 @@
 import { useEffect, useState, memo } from "react";
 import { Link } from "expo-router";
-import { FlatList, Text, View, Image, StyleSheet } from "react-native";
+import { FlatList, Text, View, Image, StyleSheet, ActivityIndicator } from "react-native";
 
 
 interface Pokemon{
@@ -44,37 +44,75 @@ export default function Index() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([])
   console.log(JSON.stringify(pokemons[0], null, 2))
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
   useEffect(() => {
     fetchPokemons();
   }, []);
 
-  async function fetchPokemons() {
-    try {
-      const response = await fetch(
-        `https://pokeapi.co/api/v2/pokemon/?limit=20`,
-      );
-      const data = await response.json();
 
-      const detailedPokemons = await Promise.all(
-        data.results.map(async (pokemon: any)=>{
-          const res = await fetch(pokemon.url)
-          const details = await res.json()
+  const onRefresh = async () => {
+  setRefreshing(true);
+  await fetchPokemons();
+  setRefreshing(false);
+  };
+async function fetchPokemons(isRefresh = false) {
+  try {
+    setLoading(true);
+    setError(null);
 
-          return {
-            name: pokemon.name,
-            image: details.sprites.front_default,
-            imageBack: details.sprites.back_default,
-            types: details.types
-          }
-        })
-      )
+    if (!isRefresh) setLoading(true);
 
-      setPokemons(detailedPokemons);
-      console.log(detailedPokemons);
+    const response = await fetch(
+      `https://pokeapi.co/api/v2/pokemon/?limit=20`
+    );
 
-    } catch (error) {
-      console.log(error);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
     }
+
+    const data = await response.json();
+
+    const detailedPokemons = await Promise.all(
+      data.results.map(async (pokemon: any) => {
+        const res = await fetch(pokemon.url);
+        const details = await res.json();
+
+        return {
+          name: pokemon.name,
+          image: details.sprites.front_default,
+          imageBack: details.sprites.back_default,
+          types: details.types,
+        };
+      })
+    );
+
+    setPokemons(detailedPokemons);
+  } catch (err) {
+    console.log(err);
+    setError("Failed to load Pokémon.");
+  } finally {
+    setLoading(false);
+    if (!isRefresh) setLoading(false);
+  }
+}
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>{error}</Text>
+      </View>
+    );
   }
 
   return (
@@ -88,6 +126,8 @@ export default function Index() {
     renderItem={({ item }) => (
       <PokemonCard pokemon={item} />
     )}
+    refreshing={refreshing}
+    onRefresh={onRefresh}
     ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
   />
 );
@@ -136,6 +176,8 @@ const PokemonCard = memo(({ pokemon }: { pokemon: Pokemon }) => {
 });
 
 PokemonCard.displayName = "PokemonCard";
+
+
 
 const styles = StyleSheet.create({
   name: {
