@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View, Image, StyleSheet } from "react-native";
 
 interface Pokemon{
   name: string,
   image: string
+  imageBack: string
+  types: PokemonType[]
+}
+
+interface PokemonType {
+  type: {
+    name: string, 
+    url: string
+  }
 }
 
 export default function Index() {
-  const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+  const [pokemons, setPokemons] = useState<Pokemon[]>([])
+  console.log(JSON.stringify(pokemons[0], null, 2))
 
   useEffect(() => {
     fetchPokemons();
@@ -27,7 +37,9 @@ export default function Index() {
 
           return {
             name: pokemon.name,
-            image: details.sprites.front_default
+            image: details.sprites.front_default,
+            imageBack: details.sprites.back_default,
+            types: details.types
           }
         })
       )
@@ -45,7 +57,19 @@ export default function Index() {
       {pokemons.map((pokemon) => (
         <View key={pokemon.name}>
           <Text>{pokemon.name}</Text>
-          <Text>{pokemon.image}</Text>
+          <Text>{pokemon.types[0].type.name}</Text>
+          <View style={{
+            flexDirection: 'row'
+          }}>
+            <Image 
+              source={{uri: pokemon.image}}
+              style={{width: 150, height: 150}}
+            />
+            <Image 
+              source={{uri: pokemon.imageBack}}
+              style={{width: 150, height: 150}}
+            />
+          </View>
         </View>
       ))}
     </ScrollView>
