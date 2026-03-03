@@ -1,6 +1,6 @@
 import { useEffect, useState, memo } from "react";
 import { Link } from "expo-router";
-import { FlatList, Text, View, Image, StyleSheet, ActivityIndicator } from "react-native";
+import { FlatList, Text, View, Image, StyleSheet, ActivityIndicator, TextInput } from "react-native";
 
 
 interface Pokemon{
@@ -46,7 +46,12 @@ export default function Index() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false)
+  const [search, setSearch] = useState("");
+
+  const filteredPokemons = pokemons.filter(p =>
+    p.name.toLowerCase().includes(search.toLowerCase())
+  )
 
   useEffect(() => {
     fetchPokemons();
@@ -116,21 +121,36 @@ async function fetchPokemons(isRefresh = false) {
   }
 
   return (
-  <FlatList
-    data={pokemons}
-    keyExtractor={(item) => item.name}
-    contentContainerStyle={{
-      padding: 16,
-      // gap: 16
-    }}
-    renderItem={({ item }) => (
-      <PokemonCard pokemon={item} />
-    )}
-    refreshing={refreshing}
-    onRefresh={onRefresh}
-    ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-  />
-);
+
+    <View style={{ flex: 1 }}>
+      <TextInput
+        placeholder="Search Pokémon..."
+        value={search}
+        onChangeText={setSearch}
+        style={{
+          margin: 16,
+          padding: 10,
+          borderWidth: 1,
+          borderRadius: 8,
+        }}
+      />
+
+      <FlatList
+          data={filteredPokemons}
+          keyExtractor={(item) => item.name}
+          contentContainerStyle={{
+            padding: 16,
+            // gap: 16
+          }}
+          renderItem={({ item }) => (
+            <PokemonCard pokemon={item} />
+          )}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+      />
+  </View>
+  )
 }
 
 const PokemonCard = memo(({ pokemon }: { pokemon: Pokemon }) => {
