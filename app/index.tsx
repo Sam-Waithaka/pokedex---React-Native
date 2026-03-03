@@ -56,8 +56,8 @@ export default function Index() {
     <ScrollView>
       {pokemons.map((pokemon) => (
         <View key={pokemon.name}>
-          <Text>{pokemon.name}</Text>
-          <Text>{pokemon.types[0].type.name}</Text>
+          <Text style={styles.name}>{pokemon.name}</Text>
+          <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
           <View style={{
             flexDirection: 'row'
           }}>
@@ -76,3 +76,14 @@ export default function Index() {
   );
 }
 
+const styles = StyleSheet.create({
+  name: {
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  type: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'grey'
+  }
+})
